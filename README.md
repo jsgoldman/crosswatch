@@ -27,7 +27,11 @@ npm start
 
 The server starts on `http://localhost:7429` by default. Set `CROSSWATCH_PORT` to change it.
 
-Open the **live dashboard** at `http://localhost:7429/dashboard` — it auto-refreshes every 3 seconds and shows:
+Open the **live dashboard** at `http://localhost:7429/dashboard`:
+
+![CrossWatch Dashboard](dashboard.png)
+
+It auto-refreshes every 3 seconds and shows:
 - **System status bar** — health, semantic provider, auto-expiry config, uptime
 - **Collision graph** — which files have multiple agents, who they are, what branches
 - **Semantic analysis** — LLM-assessed conflict severity with explanations
