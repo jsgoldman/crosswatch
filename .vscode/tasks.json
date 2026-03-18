@@ -1,0 +1,73 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CrossWatch: New Feature Worktree",
+      "type": "shell",
+      "command": "bash",
+      "args": ["${workspaceFolder}/scripts/new-feature.sh", "${input:featureName}"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "CrossWatch: Morning Sync (commit open work first!)",
+      "type": "shell",
+      "command": "bash",
+      "args": ["${workspaceFolder}/scripts/morning-sync.sh"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "CrossWatch: Remove Feature Worktree (merge branch first!)",
+      "type": "shell",
+      "command": "bash",
+      "args": ["${workspaceFolder}/scripts/remove-feature.sh", "${input:featureNameRemove}"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "CrossWatch: Start Server",
+      "type": "shell",
+      "command": "node",
+      "args": ["${workspaceFolder}/dist/index.js"],
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "CrossWatch: Build",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": ["$tsc"]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "featureName",
+      "type": "promptString",
+      "description": "Feature name (e.g. oauth-scopes). Creates branch feature/<name> and worktree ../<repo>-<name>"
+    },
+    {
+      "id": "featureNameRemove",
+      "type": "promptString",
+      "description": "Feature name to remove. Make sure you've merged the branch first!"
+    }
+  ]
+}

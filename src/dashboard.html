@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrossWatch</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2129;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --orange: #f0883e;
+    --cyan: #39d2c0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ─────────────────────────── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+  }
+
+  header .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  header .logo svg { opacity: 0.9; }
+
+  header .stats {
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  header .stats .stat-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .pulse {
+    width: 8px;
+    height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+  }
+
+  .pulse.offline {
+    background: var(--red);
+    animation: none;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── System Status Bar ───────────── */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 8px 24px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text2);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  .status-bar .status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-bar .label { color: var(--text2); }
+  .status-bar .value { color: var(--text); }
+  .status-bar .value.enabled { color: var(--green); }
+  .status-bar .value.disabled { color: var(--text2); }
+
+  /* ── Layout ─────────────────────────── */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 16px;
+    padding: 20px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-body { padding: 16px; }
+
+  /* ── Collision Graph ────────────────── */
+  .collision-graph { grid-column: 1 / -1; }
+
+  .collision-file {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--surface2);
+  }
+
+  .collision-file:last-child { margin-bottom: 0; }
+
+  .collision-file-name {
+    width: 260px;
+    min-width: 260px;
+    padding: 12px 16px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+  }
+
+  .collision-file-name .path {
+    color: var(--text2);
+    font-size: 11px;
+  }
+
+  .collision-file-name .name {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .collision-agents {
+    flex: 1;
+    padding: 8px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .agent-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .agent-chip .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .agent-chip .engineer {
+    color: var(--text2);
+    font-size: 11px;
+  }
+
+  .collision-count {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    font-size: 11px;
+    color: var(--text2);
+    min-width: 70px;
+    justify-content: center;
+  }
+
+  .collision-count .badge {
+    background: var(--yellow);
+    color: var(--bg);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 11px;
+  }
+
+  .no-collisions {
+    text-align: center;
+    padding: 40px;
+    color: var(--text2);
+    font-size: 14px;
+  }
+
+  .no-collisions svg { opacity: 0.3; margin-bottom: 12px; }
+
+  /* ── Semantic Status ────────────────── */
+  .semantic-list { max-height: 300px; overflow-y: auto; }
+
+  .semantic-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .semantic-item:last-child { border-bottom: none; }
+
+  .semantic-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .severity-badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  .severity-compatible { background: rgba(63,185,80,0.15); color: var(--green); }
+  .severity-potential-conflict { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .severity-conflict { background: rgba(248,81,73,0.15); color: var(--red); }
+
+  .semantic-files {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .semantic-explanation {
+    color: var(--text2);
+    font-size: 12px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .semantic-explanation.expanded {
+    -webkit-line-clamp: unset;
+  }
+
+  .semantic-toggle {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px 0 0;
+  }
+
+  /* ── Live Feed ──────────────────────── */
+  .feed-card { grid-column: 1 / -1; }
+
+  .feed-list { max-height: 340px; overflow-y: auto; }
+
+  .feed-item {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    gap: 12px;
+  }
+
+  .feed-item:last-child { border-bottom: none; }
+
+  .feed-time {
+    color: var(--text2);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+  }
+
+  .feed-content { display: flex; flex-direction: column; gap: 2px; }
+
+  .feed-agent {
+    font-weight: 500;
+    font-size: 12px;
+  }
+
+  .feed-action-type {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+
+  .type-edit { background: rgba(88,166,255,0.15); color: var(--accent); }
+  .type-create { background: rgba(63,185,80,0.15); color: var(--green); }
+  .type-delete { background: rgba(248,81,73,0.15); color: var(--red); }
+  .type-decision { background: rgba(188,140,255,0.15); color: var(--purple); }
+  .type-test { background: rgba(240,136,62,0.15); color: var(--orange); }
+  .type-command { background: rgba(57,210,192,0.15); color: var(--cyan); }
+
+  .feed-summary { color: var(--text2); font-size: 12px; }
+  .feed-file {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    opacity: 0.8;
+  }
+
+  /* ── Sessions Panel ─────────────────── */
+  .session-group { margin-bottom: 16px; }
+  .session-group:last-child { margin-bottom: 0; }
+
+  .engineer-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .engineer-name .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .session-entry {
+    padding: 8px 12px;
+    margin-left: 18px;
+    border-left: 2px solid var(--border);
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .session-branch {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--accent);
+    font-size: 11px;
+  }
+
+  .session-agent { color: var(--text2); }
+  .session-files { color: var(--text2); font-size: 11px; }
+
+  /* ── Responsive ───────────────────────── */
+  @media (max-width: 900px) {
+    main {
+      grid-template-columns: 1fr;
+    }
+
+    .collision-graph { grid-column: 1; }
+    .feed-card { grid-column: 1; }
+
+    header {
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    header .stats {
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .status-bar {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .collision-file {
+      flex-direction: column;
+    }
+
+    .collision-file-name {
+      width: auto;
+      min-width: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .collision-count {
+      justify-content: flex-start;
+      padding: 8px 16px;
+    }
+  }
+
+  @media (max-width: 500px) {
+    main { padding: 12px; gap: 12px; }
+    header { padding: 12px 16px; }
+    .status-bar { padding: 8px 16px; }
+
+    .feed-item {
+      grid-template-columns: 55px 1fr;
+    }
+  }
+
+  /* ── Scrollbar ──────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Empty states ───────────────────── */
+  .empty { color: var(--text2); font-size: 13px; padding: 20px 0; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      <path d="M2 12h20"/>
+    </svg>
+    CrossWatch
+    <span class="pulse" id="pulse"></span>
+  </div>
+  <div class="stats">
+    <div><span class="stat-value" id="stat-sessions">-</span>sessions</div>
+    <div><span class="stat-value" id="stat-files">-</span>files tracked</div>
+    <div><span class="stat-value" id="stat-collisions">-</span>collisions</div>
+    <div><span class="stat-value" id="stat-registrations">-</span>registrations</div>
+  </div>
+</header>
+
+<div class="status-bar" id="status-bar">
+  <div class="status-item">
+    <span class="label">System</span>
+    <span class="value" id="sys-health">connecting...</span>
+  </div>
+  <div class="status-item">
+    <span class="label">Semantic</span>
+    <span class="value" id="sys-semantic">-</span>
+  </div>
+  <div class="status-item">
+    <span class="label">Auto-expiry</span>
+    <span class="value" id="sys-expiry">-</span>
+  </div>
+  <div class="status-item">
+    <span class="label">Uptime</span>
+    <span class="value" id="sys-uptime">-</span>
+  </div>
+</div>
+
+<main>
+  <!-- Collision Graph -->
+  <div class="card collision-graph">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Collision Graph
+    </div>
+    <div class="card-body" id="collision-graph"></div>
+  </div>
+
+  <!-- Semantic Analysis -->
+  <div class="card">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+      Semantic Analysis
+    </div>
+    <div class="card-body" id="semantic-status"></div>
+  </div>
+
+  <!-- Sessions -->
+  <div class="card">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Active Sessions
+    </div>
+    <div class="card-body" id="sessions-panel"></div>
+  </div>
+
+  <!-- Live Feed -->
+  <div class="card feed-card">
+    <div class="card-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Live Feed
+    </div>
+    <div class="card-body">
+      <div class="feed-list" id="feed-list"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const BASE = window.location.origin;
+const COLORS = ['#58a6ff','#bc8cff','#f0883e','#39d2c0','#f85149','#3fb950','#d29922','#da70d6'];
+const engineerColors = {};
+let colorIdx = 0;
+let feedCursor = 0;
+
+function getColor(id) {
+  if (!engineerColors[id]) {
+    engineerColors[id] = COLORS[colorIdx % COLORS.length];
+    colorIdx++;
+  }
+  return engineerColors[id];
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function fetchHealth() {
+  try {
+    const res = await fetch(`${BASE}/health`);
+    return await res.json();
+  } catch { return null; }
+}
+
+async function fetchStatus() {
+  try {
+    const res = await fetch(`${BASE}/status`);
+    return await res.json();
+  } catch { return null; }
+}
+
+async function fetchFeed() {
+  try {
+    const res = await fetch(`${BASE}/feed/file?limit=50`);
+    return await res.json();
+  } catch { return null; }
+}
+
+function formatUptime(seconds) {
+  if (seconds < 60) return `${Math.floor(seconds)}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return `${h}h ${m}m`;
+}
+
+function renderHealth(health) {
+  const pulse = document.getElementById('pulse');
+  const healthEl = document.getElementById('sys-health');
+  const semanticEl = document.getElementById('sys-semantic');
+  const expiryEl = document.getElementById('sys-expiry');
+  const uptimeEl = document.getElementById('sys-uptime');
+
+  if (!health) {
+    pulse.classList.add('offline');
+    healthEl.textContent = 'offline';
+    healthEl.className = 'value disabled';
+    return;
+  }
+
+  pulse.classList.remove('offline');
+  healthEl.textContent = 'ok';
+  healthEl.className = 'value enabled';
+
+  if (health.semantic?.enabled) {
+    semanticEl.textContent = `enabled (${health.semantic.provider})`;
+    semanticEl.className = 'value enabled';
+  } else {
+    semanticEl.textContent = 'disabled';
+    semanticEl.className = 'value disabled';
+  }
+
+  if (health.autoExpiry?.enabled) {
+    expiryEl.textContent = `${health.autoExpiry.ttlMinutes}m TTL, sweep ${health.autoExpiry.sweepMinutes}m`;
+    expiryEl.className = 'value';
+  } else {
+    expiryEl.textContent = 'disabled';
+    expiryEl.className = 'value disabled';
+  }
+
+  uptimeEl.textContent = formatUptime(health.uptime);
+}
+
+function renderStats(status) {
+  document.getElementById('stat-sessions').textContent = status.totalSessions;
+  document.getElementById('stat-files').textContent = status.totalFiles;
+  document.getElementById('stat-collisions').textContent = status.collisionFiles.length;
+  document.getElementById('stat-registrations').textContent = status.totalRegistrations;
+}
+
+function renderCollisionGraph(status) {
+  const el = document.getElementById('collision-graph');
+
+  if (status.collisionGraph.length === 0) {
+    el.innerHTML = '<div class="no-collisions"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg><div>No collisions detected</div></div>';
+    return;
+  }
+
+  el.innerHTML = status.collisionGraph.map(edge => {
+    const parts = edge.file.split('/');
+    const fileName = parts.pop();
+    const dir = parts.join('/');
+
+    const chips = edge.sessions.map(s => {
+      const color = getColor(s.engineerId || s.agentId);
+      const engineer = s.engineerId && s.engineerId !== 'unknown' ? `<span class="engineer">${escapeHtml(s.engineerId)}</span>` : '';
+      return `<span class="agent-chip"><span class="dot" style="background:${color}"></span>${escapeHtml(s.agentId)}${engineer ? ' &middot; ' + engineer : ''}<span class="session-branch">${escapeHtml(s.branch)}</span></span>`;
+    }).join('');
+
+    return `<div class="collision-file">
+      <div class="collision-file-name">
+        <span class="path">${escapeHtml(dir)}/</span>
+        <span class="name">${escapeHtml(fileName)}</span>
+      </div>
+      <div class="collision-agents">${chips}</div>
+      <div class="collision-count"><span class="badge">${edge.sessions.length} agents</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderSessions(status) {
+  const el = document.getElementById('sessions-panel');
+  if (status.totalSessions === 0) {
+    el.innerHTML = '<div class="empty">No active sessions</div>';
+    return;
+  }
+
+  // Group registrations by engineer, then by session
+  const engineers = {};
+  for (const reg of status.registrations) {
+    const eng = reg.engineerId || 'unknown';
+    if (!engineers[eng]) engineers[eng] = {};
+    if (!engineers[eng][reg.sessionId]) {
+      engineers[eng][reg.sessionId] = { agentId: reg.agentId, branch: reg.branch, files: [] };
+    }
+    if (!engineers[eng][reg.sessionId].files.includes(reg.file)) {
+      engineers[eng][reg.sessionId].files.push(reg.file);
+    }
+  }
+
+  el.innerHTML = Object.entries(engineers).map(([eng, sessions]) => {
+    const color = getColor(eng);
+    const sessionHtml = Object.entries(sessions).map(([sid, info]) => {
+      return `<div class="session-entry">
+        <span class="session-branch">${escapeHtml(info.branch)}</span>
+        <span class="session-agent"> &middot; ${escapeHtml(info.agentId)}</span>
+        <div class="session-files">${info.files.length} file(s): ${info.files.map(f => escapeHtml(f.split('/').pop())).join(', ')}</div>
+      </div>`;
+    }).join('');
+
+    const label = eng === 'unknown' ? 'Unknown Engineer' : eng;
+    return `<div class="session-group">
+      <div class="engineer-name"><span class="dot" style="background:${color}"></span>${escapeHtml(label)} <span style="color:var(--text2);font-weight:400;font-size:12px">(${Object.keys(sessions).length} session${Object.keys(sessions).length !== 1 ? 's' : ''})</span></div>
+      ${sessionHtml}
+    </div>`;
+  }).join('');
+}
+
+function renderFeed(actions) {
+  const el = document.getElementById('feed-list');
+
+  if (actions.length === 0 && el.children.length === 0) {
+    el.innerHTML = '<div class="empty">Waiting for activity...</div>';
+    return;
+  }
+
+  // Only add new actions
+  const newActions = actions.filter(a => a.seq > feedCursor);
+  if (newActions.length === 0) return;
+
+  if (el.querySelector('.empty')) el.innerHTML = '';
+
+  for (const a of newActions) {
+    const time = a.timestamp.split('T')[1]?.slice(0,8) || '';
+    const color = getColor(a.engineerId || a.agentId);
+    const engineer = a.engineerId && a.engineerId !== 'unknown' ? ` &middot; ${escapeHtml(a.engineerId)}` : '';
+    const typeClass = `type-${a.type}`;
+
+    const div = document.createElement('div');
+    div.className = 'feed-item';
+    div.innerHTML = `
+      <span class="feed-time">${time}</span>
+      <div class="feed-content">
+        <div><span class="feed-agent" style="color:${color}">${escapeHtml(a.agentId)}${engineer}</span></div>
+        <div><span class="feed-action-type ${typeClass}">${a.type}</span><span class="feed-summary">${escapeHtml(a.summary)}</span></div>
+        <div class="feed-file">${escapeHtml(a.file)}</div>
+      </div>`;
+
+    el.insertBefore(div, el.firstChild);
+    feedCursor = Math.max(feedCursor, a.seq);
+  }
+
+  // Keep max 100 items
+  while (el.children.length > 100) el.removeChild(el.lastChild);
+}
+
+function renderSemantic(status) {
+  const el = document.getElementById('semantic-status');
+
+  // We don't have a bulk semantic endpoint, so we try each collision pair
+  // For the mockup, show a placeholder based on collision data
+  if (status.collisionGraph.length === 0) {
+    el.innerHTML = '<div class="empty">No collision pairs to analyze</div>';
+    return;
+  }
+
+  // Fetch semantic data for sessions involved in collisions
+  const sessionIds = new Set();
+  for (const edge of status.collisionGraph) {
+    for (const s of edge.sessions) {
+      sessionIds.add(s.sessionId);
+    }
+  }
+
+  Promise.all([...sessionIds].map(sid =>
+    fetch(`${BASE}/semantic/${sid}`).then(r => r.json()).catch(() => ({ analyses: [] }))
+  )).then(results => {
+    const seen = new Set();
+    const analyses = [];
+    for (const r of results) {
+      for (const a of (r.analyses || [])) {
+        if (!seen.has(a.id)) {
+          seen.add(a.id);
+          analyses.push(a);
+        }
+      }
+    }
+
+    if (analyses.length === 0) {
+      el.innerHTML = '<div class="empty">No semantic analysis results yet.<br><span style="font-size:11px;color:var(--text2)">Analyses run automatically when agents record actions on collision files.</span></div>';
+      return;
+    }
+
+    el.innerHTML = '<div class="semantic-list">' + analyses.map((a, i) => {
+      const severityClass = `severity-${a.severity}`;
+      const label = a.severity === 'potential-conflict' ? 'potential' : a.severity;
+      return `<div class="semantic-item">
+        <div class="semantic-meta">
+          <span class="severity-badge ${severityClass}">${label}</span>
+          <span class="semantic-files">${a.files.map(f => escapeHtml(f.split('/').pop())).join(', ')}</span>
+        </div>
+        <div class="semantic-explanation" id="sem-exp-${i}">${escapeHtml(a.explanation)}</div>
+        <button class="semantic-toggle" onclick="const el=document.getElementById('sem-exp-${i}');el.classList.toggle('expanded');this.textContent=el.classList.contains('expanded')?'show less':'show more'">show more</button>
+      </div>`;
+    }).join('') + '</div>';
+  });
+}
+
+async function refresh() {
+  const [health, status] = await Promise.all([fetchHealth(), fetchStatus()]);
+  renderHealth(health);
+  if (!status) return;
+
+  renderStats(status);
+  renderCollisionGraph(status);
+  renderSessions(status);
+  renderSemantic(status);
+
+  // Fetch all recent actions for the feed
+  try {
+    const allActions = [];
+    for (const file of status.collisionFiles) {
+      const r = await fetch(`${BASE}/feed/file?file=${encodeURIComponent(file)}&limit=20`);
+      const data = await r.json();
+      allActions.push(...data.actions);
+    }
+    // Also get non-collision actions from all registrations
+    const seenIds = new Set(allActions.map(a => a.id));
+    for (const reg of status.registrations) {
+      if (!status.collisionFiles.includes(reg.file)) {
+        try {
+          const r = await fetch(`${BASE}/feed/file?file=${encodeURIComponent(reg.file)}&limit=10`);
+          const data = await r.json();
+          for (const a of data.actions) {
+            if (!seenIds.has(a.id)) {
+              seenIds.add(a.id);
+              allActions.push(a);
+            }
+          }
+        } catch {}
+      }
+    }
+
+    allActions.sort((a, b) => a.seq - b.seq);
+    renderFeed(allActions);
+  } catch {}
+}
+
+// Initial load + poll
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>
